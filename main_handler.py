@@ -55,6 +55,11 @@ For more cat maintenance tips, tap to view the website!</p>
 </article>
 """
 
+def reply(quote):
+    if quote[:3].lower() == "hi " or quote[:3].lower() == "hel":
+        return "hi my name is Sexy MoFo"
+    else:
+        return "I don't understand, but I'm a sexy MoFo"
 
 class _BatchCallback(object):
   """Class used to track batch request responses."""
