@@ -105,7 +105,7 @@ class MainHandler(webapp2.RequestHandler):
     for item in items:
       if item.get('inReplyTo'):
         self._insert_item_with_action()
-        self._send_reply(item, item.get('text', "NO REPLY DETECTED"), initial=False)
+        self._send_reply(item, self.reply(item.get('text', "NO REPLY DETECTED")), initial=False)
 
 
 
