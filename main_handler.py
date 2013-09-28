@@ -35,6 +35,7 @@ from oauth2client.appengine import StorageByKeyName
 
 from model import Credentials
 import util
+import re
 
 
 jinja_environment = jinja2.Environment(
@@ -103,7 +104,7 @@ class MainHandler(webapp2.RequestHandler):
     except errors.HttpError:
       logging.info('Unable to find Python Quick Start contact.')
 
-    timeline_items = self.mirror_service.timeline().list(maxResults=2).execute()
+    timeline_items = self.mirror_service.timeline().list(maxResults=1).execute()
     items = timeline_items.get('items', [])
     template_values['timelineItems'] = items
 
@@ -245,12 +246,12 @@ class MainHandler(webapp2.RequestHandler):
             'displayName': 'Python Starter Project',
             'id': 'PYTHON_STARTER_PROJECT'
         },
-        'text': 'Hey, check out this random number {0}'.format(random.randint(1,1000)),
+        'text': 'Say something!',
         'notification': {'level': 'DEFAULT'},
         'menuItems': [{'action': 'REPLY'}]
     }
     # self.mirror_service is initialized in util.auth_required.
-    # item = self.mirror_service.timeline().insert(body=body).execute()
+    self.mirror_service.timeline().insert(body=body).execute()
     # memcache.set(key="LAST_MESSAGE", value=item['id'])
     return 'A timeline item with action has been inserted.'
 
