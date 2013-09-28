@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Utility functions for the Quickstart."""
+"""Utility functions for the Quickstart. """
 
 __author__ = 'alainv@google.com (Alain Vongsouvanh)'
 
