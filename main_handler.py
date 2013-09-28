@@ -22,6 +22,7 @@ import jinja2
 import logging
 import os
 import webapp2
+import random
 
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
@@ -92,8 +93,16 @@ class MainHandler(webapp2.RequestHandler):
     except errors.HttpError:
       logging.info('Unable to find Python Quick Start contact.')
 
-    timeline_items = self.mirror_service.timeline().list(maxResults=3).execute()
-    template_values['timelineItems'] = timeline_items.get('items', [])
+    timeline_items = self.mirror_service.timeline().list(maxResults=4).execute()
+    items = timeline_items.get('items', [])
+    template_values['timelineItems'] = items
+
+    for item in items:
+      if item.get('inReplyTo'):
+        self._send_reply(item, message, initial=False)
+
+
+
 
     subscriptions = self.mirror_service.subscriptions().list().execute()
     for subscription in subscriptions.get('items', []):
@@ -137,6 +146,32 @@ class MainHandler(webapp2.RequestHandler):
     # Store the flash message for 5 seconds.
     memcache.set(key=self.userid, value=message, time=5)
     self.redirect('/')
+
+  def _send_reply(self, item, message, initial=False):
+    msg = ""
+    if initial:
+      msg = message
+    else:
+      if memcache.get(key="LAST_MESSAGE") == item['id']:
+        msg = 'Hey, check out this random number {0}'.format(random.randint(1,1000))
+
+    """Insert a timeline item user can reply to."""
+    logging.info('Inserting timeline item')
+    body = {
+        'creator': {
+            'displayName': 'Python Starter Project',
+            'id': 'PYTHON_STARTER_PROJECT'
+        },
+        'text': msg,
+        'notification': {'level': 'DEFAULT'},
+        'menuItems': [{'action': 'REPLY'}]
+    }
+    # self.mirror_service is initialized in util.auth_required.
+    item = self.mirror_service.timeline().insert(body=body).execute()
+    memcache.delete(key="LAST_MESSAGE")
+    memcache.set(key="LAST_MESSAGE", value=item['id'])
+    return 'A timeline item with action has been inserted.'
+
 
   def _insert_subscription(self):
     """Subscribe the app."""
@@ -204,7 +239,7 @@ class MainHandler(webapp2.RequestHandler):
             'displayName': 'Python Starter Project',
             'id': 'PYTHON_STARTER_PROJECT'
         },
-        'text': 'Tell me what you had for lunch :)',
+        'text': 'Hey, check out this random number {0}'.format(random.randint(1,1000)),
         'notification': {'level': 'DEFAULT'},
         'menuItems': [{'action': 'REPLY'}]
     }
