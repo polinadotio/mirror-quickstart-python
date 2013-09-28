@@ -81,10 +81,15 @@ class MainHandler(webapp2.RequestHandler):
   """Request Handler for the main endpoint."""
 
   def reply(self,quote):
-      if quote[:3].lower() == "hi " or quote[:3].lower() == "hel":
-          return "hi my name is Sexy MoFo"
-      else:
-          return "I don't understand, but I'm a sexy MoFo"
+    quote_new = quote.replace(",", "").replace(".", "").replace("!", "").replace("?", "")
+    m = re.match("(\w+) my name is (\w+)",quote_new,flags=0)
+    n = re.match("(\w+) how are you",quote_new,flags=0)
+    if m != None:
+        return m.group(1) + " " + m.group(2) + ", my name is Sexy Mofo"
+    if n != None:
+        return "I am just fly"
+    else:
+        return "I don't understand, but I'm a Sexy MoFo"
 
   def _render_template(self, message=None):
     """Render the main page template."""
