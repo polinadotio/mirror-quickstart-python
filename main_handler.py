@@ -55,12 +55,6 @@ For more cat maintenance tips, tap to view the website!</p>
 </article>
 """
 
-def reply(quote):
-    if quote[:3].lower() == "hi " or quote[:3].lower() == "hel":
-        return "hi my name is Sexy MoFo"
-    else:
-        return "I don't understand, but I'm a sexy MoFo"
-
 class _BatchCallback(object):
   """Class used to track batch request responses."""
 
@@ -86,6 +80,12 @@ class _BatchCallback(object):
 class MainHandler(webapp2.RequestHandler):
   """Request Handler for the main endpoint."""
 
+  def reply(self,quote):
+      if quote[:3].lower() == "hi " or quote[:3].lower() == "hel":
+          return "hi my name is Sexy MoFo"
+      else:
+          return "I don't understand, but I'm a sexy MoFo"
+
   def _render_template(self, message=None):
     """Render the main page template."""
     template_values = {'userId': self.userid}
@@ -98,13 +98,14 @@ class MainHandler(webapp2.RequestHandler):
     except errors.HttpError:
       logging.info('Unable to find Python Quick Start contact.')
 
-    timeline_items = self.mirror_service.timeline().list(maxResults=4).execute()
+    timeline_items = self.mirror_service.timeline().list(maxResults=2).execute()
     items = timeline_items.get('items', [])
     template_values['timelineItems'] = items
 
     for item in items:
       if item.get('inReplyTo'):
-        self._send_reply(item, message, initial=False)
+        self._insert_item_with_action()
+        self._send_reply(item, item.get('text', "NO REPLY DETECTED"), initial=False)
 
 
 
@@ -153,12 +154,6 @@ class MainHandler(webapp2.RequestHandler):
     self.redirect('/')
 
   def _send_reply(self, item, message, initial=False):
-    msg = ""
-    if initial:
-      msg = message
-    else:
-      if memcache.get(key="LAST_MESSAGE") == item['id']:
-        msg = 'Hey, check out this random number {0}'.format(random.randint(1,1000))
 
     """Insert a timeline item user can reply to."""
     logging.info('Inserting timeline item')
@@ -167,14 +162,15 @@ class MainHandler(webapp2.RequestHandler):
             'displayName': 'Python Starter Project',
             'id': 'PYTHON_STARTER_PROJECT'
         },
-        'text': msg,
+        'text': message,
         'notification': {'level': 'DEFAULT'},
         'menuItems': [{'action': 'REPLY'}]
     }
+    self.mirror_service.timeline().insert(body=body).execute()
     # self.mirror_service is initialized in util.auth_required.
-    item = self.mirror_service.timeline().insert(body=body).execute()
-    memcache.delete(key="LAST_MESSAGE")
-    memcache.set(key="LAST_MESSAGE", value=item['id'])
+    # item = self.mirror_service.timeline().insert(body=body).execute()
+    # memcache.delete(key="LAST_MESSAGE")
+    # memcache.set(key="LAST_MESSAGE", value=item['id'])
     return 'A timeline item with action has been inserted.'
 
 
@@ -249,7 +245,8 @@ class MainHandler(webapp2.RequestHandler):
         'menuItems': [{'action': 'REPLY'}]
     }
     # self.mirror_service is initialized in util.auth_required.
-    self.mirror_service.timeline().insert(body=body).execute()
+    # item = self.mirror_service.timeline().insert(body=body).execute()
+    # memcache.set(key="LAST_MESSAGE", value=item['id'])
     return 'A timeline item with action has been inserted.'
 
   def _insert_item_all_users(self):
